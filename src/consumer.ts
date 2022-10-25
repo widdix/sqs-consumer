@@ -213,11 +213,11 @@ export class Consumer extends EventEmitter {
         });
       }
       await this.executeHandler(message);
+      clearInterval(heartbeat);
       await this.deleteMessage(message);
       this.emit('message_processed', message);
     } catch (err) {
       this.emitError(err, message);
-
       if (this.terminateVisibilityTimeout) {
         await this.changeVisibilityTimeout(message, 0);
       }
@@ -354,13 +354,13 @@ export class Consumer extends EventEmitter {
         });
       }
       await this.executeBatchHandler(messages);
+      clearInterval(heartbeat);
       await this.deleteMessageBatch(messages);
       messages.forEach((message) => {
         this.emit('message_processed', message);
       });
     } catch (err) {
       this.emit('error', err, messages);
-
       if (this.terminateVisibilityTimeout) {
         await this.changeVisabilityTimeoutBatch(messages, 0);
       }
