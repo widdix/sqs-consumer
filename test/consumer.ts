@@ -702,7 +702,7 @@ describe('Consumer', () => {
       consumer = new Consumer({
         queueUrl: 'some-queue-url',
         region: 'some-region',
-        handleMessage: () => new Promise((resolve) => setTimeout(resolve, 75000)),
+        handleMessage: () => new Promise((resolve) => setTimeout(resolve, 45000)),
         sqs,
         visibilityTimeout: 40,
         heartbeatInterval: 30
@@ -712,7 +712,7 @@ describe('Consumer', () => {
       sqs.changeMessageVisibility = stubReject(receiveErr);
 
       consumer.start();
-      const [err]: any[] = await Promise.all([pEvent(consumer, 'error'), clock.tickAsync(75000)]);
+      const [err]: any[] = await Promise.all([pEvent(consumer, 'error'), clock.tickAsync(45000)]);
       consumer.stop();
 
       assert.ok(err);
@@ -729,7 +729,7 @@ describe('Consumer', () => {
       consumer = new Consumer({
         queueUrl: 'some-queue-url',
         region: 'some-region',
-        handleMessageBatch: () => new Promise((resolve) => setTimeout(resolve, 75000)),
+        handleMessageBatch: () => new Promise((resolve) => setTimeout(resolve, 45000)),
         sqs,
         batchSize: 2,
         visibilityTimeout: 40,
@@ -740,7 +740,7 @@ describe('Consumer', () => {
       sqs.changeMessageVisibilityBatch = stubReject(receiveErr);
 
       consumer.start();
-      const [err]: any[] = await Promise.all([pEvent(consumer, 'error'), clock.tickAsync(75000)]);
+      const [err]: any[] = await Promise.all([pEvent(consumer, 'error'), clock.tickAsync(45000)]);
       consumer.stop();
 
       assert.ok(err);
