@@ -206,8 +206,10 @@ export class Consumer extends EventEmitter {
     let heartbeat;
     try {
       if (this.heartbeatInterval) {
-        heartbeat = this.startHeartbeat(async () => {
-          return this.changeVisibilityTimeout(message, this.visibilityTimeout);
+        heartbeat = this.startHeartbeat(() => {
+          this.changeVisibilityTimeout(message, this.visibilityTimeout).catch(err => {
+            this.emit('error', err, message)
+          });
         });
       }
       await this.executeHandler(message);
@@ -280,9 +282,9 @@ export class Consumer extends EventEmitter {
     }
   }
 
-  private async changeVisibilityTimeout(message: SQSMessage, timeout: number): Promise<PromiseResult<any, AWSError>> {
+  private async changeVisibilityTimeout(message: SQSMessage, timeout: number): Promise<void> {
     try {
-      return await this.sqs
+      await this.sqs
         .changeMessageVisibility({
           QueueUrl: this.queueUrl,
           ReceiptHandle: message.ReceiptHandle,
@@ -290,7 +292,7 @@ export class Consumer extends EventEmitter {
         })
         .promise();
     } catch (err) {
-      this.emit('error', toSQSError(err, `Error changing visibility timeout: ${err.message}`), message);
+      throw toSQSError(err, `Error changing visibility timeout: ${err.message}`);
     }
   }
 
@@ -345,8 +347,10 @@ export class Consumer extends EventEmitter {
     let heartbeat;
     try {
       if (this.heartbeatInterval) {
-        heartbeat = this.startHeartbeat(async () => {
-          return this.changeVisabilityTimeoutBatch(messages, this.visibilityTimeout);
+        heartbeat = this.startHeartbeat(() => {
+          this.changeVisabilityTimeoutBatch(messages, this.visibilityTimeout).catch(err => {
+            this.emit('error', err, messages)
+          });
         });
       }
       await this.executeBatchHandler(messages);
@@ -398,7 +402,7 @@ export class Consumer extends EventEmitter {
     }
   }
 
-  private async changeVisabilityTimeoutBatch(messages: SQSMessage[], timeout: number): Promise<PromiseResult<any, AWSError>> {
+  private async changeVisabilityTimeoutBatch(messages: SQSMessage[], timeout: number): Promise<void> {
     const params = {
       QueueUrl: this.queueUrl,
       Entries: messages.map((message) => ({
@@ -408,11 +412,11 @@ export class Consumer extends EventEmitter {
       }))
     };
     try {
-      return await this.sqs
+      await this.sqs
         .changeMessageVisibilityBatch(params)
         .promise();
     } catch (err) {
-      this.emit('error', toSQSError(err, `Error changing visibility timeout: ${err.message}`), messages);
+      throw toSQSError(err, `Error changing visibility timeout: ${err.message}`);
     }
   }
 
