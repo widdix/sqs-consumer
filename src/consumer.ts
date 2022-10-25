@@ -207,13 +207,16 @@ export class Consumer extends EventEmitter {
     try {
       if (this.heartbeatInterval) {
         heartbeat = this.startHeartbeat(() => {
-          this.changeVisibilityTimeout(message, this.visibilityTimeout).catch(err => {
-            this.emit('error', err, message)
+          this.changeVisibilityTimeout(message, this.visibilityTimeout).catch((err) => {
+            this.emit('error', err, message);
           });
         });
       }
       await this.executeHandler(message);
-      clearInterval(heartbeat);
+      if (heartbeat) {
+        clearInterval(heartbeat);
+        heartbeat = undefined;
+      }
       await this.deleteMessage(message);
       this.emit('message_processed', message);
     } catch (err) {
@@ -222,7 +225,10 @@ export class Consumer extends EventEmitter {
         await this.changeVisibilityTimeout(message, 0);
       }
     } finally {
-      clearInterval(heartbeat);
+      if (heartbeat) {
+        clearInterval(heartbeat);
+        heartbeat = undefined;
+      }
     }
   }
 
@@ -348,13 +354,16 @@ export class Consumer extends EventEmitter {
     try {
       if (this.heartbeatInterval) {
         heartbeat = this.startHeartbeat(() => {
-          this.changeVisabilityTimeoutBatch(messages, this.visibilityTimeout).catch(err => {
-            this.emit('error', err, messages)
+          this.changeVisabilityTimeoutBatch(messages, this.visibilityTimeout).catch((err) => {
+            this.emit('error', err, messages);
           });
         });
       }
       await this.executeBatchHandler(messages);
-      clearInterval(heartbeat);
+      if (heartbeat) {
+        clearInterval(heartbeat);
+        heartbeat = undefined;
+      }
       await this.deleteMessageBatch(messages);
       messages.forEach((message) => {
         this.emit('message_processed', message);
@@ -365,7 +374,10 @@ export class Consumer extends EventEmitter {
         await this.changeVisabilityTimeoutBatch(messages, 0);
       }
     } finally {
-      clearInterval(heartbeat);
+      if (heartbeat) {
+        clearInterval(heartbeat);
+        heartbeat = undefined;
+      }
     }
   }
 
